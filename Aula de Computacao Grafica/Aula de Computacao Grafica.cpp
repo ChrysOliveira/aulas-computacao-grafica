@@ -1,8 +1,10 @@
 #include <stdio.h>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
 #include <string.h>
+#include <GL\glew.h>
+#include <GLFW\glfw3.h>
+#include <time.h>
+#include <iostream>
+#include <chrono>
 
 //Window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
@@ -135,55 +137,56 @@ void CompileShaders() {
 
 int main()
 {
-	//GLEW = GERENCIADOR DE PACOTES DO OPENGL
-	//GLFW = GERENCIADOR DE JANELAS
+    //auto t_start = std::chrono::high_resolution_clock::now();
+    //initialize GLFW
+    if (!glfwInit()) {
+        printf("GLFW Inicialization fail");
+        glfwTerminate();
+        return 1;
+    }
 
-	if (!glfwInit()) {
-		printf("Não funcionou o GLFW");
-		return 1;
-	}
+    //Setting GLFW window propeties
+    //OpenGL Version
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    //Core profile = No Backwards compatibility
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //Allow foward compatibility
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	//definindo as versoes min e max do glfw
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    GLFWwindow* mainWindow = glfwCreateWindow(WIDTH, HEIGHT, "Teste", NULL, NULL);
+    if (!mainWindow) {
+        printf("GLFW window create fail!");
+        glfwTerminate();
+        return 1;
+    }
 
-	//defini para so usar o basico do opengl
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //Get buffer size information
+    int bufferWidth, bufferHeight;
+    glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
 
-	//compatibilidade entre funcoes antigas
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    //Set the context for GLEW to use
+    glfwMakeContextCurrent(mainWindow);
 
-	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "computacao-grafica", NULL, NULL);
+    //Allow modern extentions features
+    glewExperimental = GL_TRUE;
 
-	if (!window) {
-		printf("Janela não foi aberta");
-		glfwTerminate();
-		return 1;
-	}
+    if (glewInit() != GLEW_OK) {
+        printf("Glew Inicialization fail!");
+        glfwDestroyWindow(mainWindow);
+        glfwTerminate();
+        return 1;
+    }
 
-	int bufferWidth, bufferHeight;
-	glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
+    //Setup viewports sizes
+    glViewport(0, 0, bufferWidth, bufferHeight);
 
-	//define que eh esta janela que estamos trabalhando
-	glfwMakeContextCurrent(window);
-
-	//usa as funcoes dos drives da sua placa de video
-	glewExperimental = GL_TRUE;
-
-	if (glewInit() != GLEW_OK) {
-		printf("Nao foi iniciado o GLEW");
-		glfwTerminate();
-		glfwDestroyWindow(window);
-		return 1;
-	}
-
-	glViewport(0, 0, bufferWidth, bufferHeight);
-
-    CompileShaders();
+    //Criar o triangulo
     CreateTriagle();
+    CompileShaders();
 
     //Loop until the window close
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(mainWindow)) {
         //Get + Handle user input events
         glfwPollEvents();
 
@@ -209,9 +212,7 @@ int main()
         glBindVertexArray(0);
         glUseProgram(0); //remove o programa da memória
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(mainWindow);
     }
-
     return 0;
-    
 }
